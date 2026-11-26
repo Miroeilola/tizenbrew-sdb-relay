@@ -1,0 +1,11 @@
+{
+  "name": "tizenbrew-sdb-relay",
+  "version": "0.1.0",
+  "description": "TizenBrew service that relays sdb from one allowed PC to the TV's local sdbd, so Host PC IP can stay 127.0.0.1",
+  "packageType": "app",
+  "appName": "SDB Relay",
+  "appPath": "app/index.html",
+  "serviceFile": "service.js",
+  "keys": [],
+  "license": "MIT"
+}

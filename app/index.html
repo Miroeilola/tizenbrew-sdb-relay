@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SDB Relay</title>
+    <style>
+        body { margin: 0; padding: 80px 120px; background: #111; color: #eee; font: 28px/1.5 sans-serif; }
+        h1 { font-size: 48px; margin: 0 0 40px; }
+        .ok { color: #6c6; } .bad { color: #e66; } .dim { color: #999; }
+        table { border-collapse: collapse; }
+        td { padding: 6px 40px 6px 0; vertical-align: top; }
+        td:first-child { color: #999; }
+        .hint { margin-top: 48px; font-size: 22px; color: #888; }
+    </style>
+</head>
+<body>
+    <h1>SDB Relay</h1>
+    <table id="t"><tr><td>Status</td><td class="dim">Waiting for service…</td></tr></table>
+    <div class="hint">Return: back to TizenBrew</div>
+    <script>
+        function esc(s) {
+            return String(s).replace(/[&<>"]/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+            });
+        }
+        function row(k, v, cls) {
+            return '<tr><td>' + esc(k) + '</td><td' + (cls ? ' class="' + cls + '"' : '') + '>' + esc(v) + '</td></tr>';
+        }
+        function render(s) {
+            var html = '';
+            html += row('Status', s.listening ? 'Listening on port ' + s.listenPort : 'Not listening' + (s.error ? ': ' + s.error : ''), s.listening ? 'ok' : 'bad');
+            html += row('Allowed', s.allowed.join(', '));
+            html += row('Active connections', s.active);
+            html += row('Accepted total', s.accepted);
+            html += row('Last accepted', s.lastAccepted ? s.lastAccepted.addr + ' ' + s.lastAccepted.at : '–');
+            html += row('Rejected (latest)', s.rejected.length ? s.rejected.map(function (r) { return r.addr + ' ' + r.at; }).join('\n') : '–');
+            html += row('Service started', s.started + ' (v' + s.version + ')', 'dim');
+            document.getElementById('t').innerHTML = html;
+        }
+        function poll() {
+            var x = new XMLHttpRequest();
+            x.open('GET', 'http://127.0.0.1:26103/', true);
+            x.timeout = 1500;
+            x.onload = function () { try { render(JSON.parse(x.responseText)); } catch (e) {} };
+            x.onerror = x.ontimeout = function () {
+                document.getElementById('t').innerHTML = row('Status', 'Service not reachable (still starting, or crashed – see TizenBrew)', 'bad');
+            };
+            x.send();
+        }
+        poll();
+        setInterval(poll, 2000);
+        try { tizen.tvinputdevice.registerKey('Return'); } catch (e) {}
+        document.addEventListener('keydown', function (e) {
+            if (e.keyCode === 10009 || e.keyCode === 8) history.back();
+        });
+    </script>
+</body>
+</html>
